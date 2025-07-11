@@ -82,9 +82,9 @@
   </div>
 
   <script>
-    // Map admission number to assigned unique ID
-    const studentIdMap = new Map();
     const usedIds = new Set();
+    const studentIdMap = new Map();
+    const endpoint = "https://script.google.com/macros/s/AKfycbyQ0WF-QYU9VHZYTYk1OMROBtArp71OVFBsDvmp9X6BuErOayergvPmpGJxNdxdo5C2/exec";
 
     function generateID() {
       const name = document.getElementById('name').value.trim();
@@ -98,10 +98,11 @@
         return;
       }
 
-      // Return existing ID if already generated for this admission number
+      // If already generated
       if (studentIdMap.has(adm)) {
-        output.innerText = `Your Unique ID: ${studentIdMap.get(adm)}`;
-        saveToSheet(name, dept, semester, adm, uniqueID);
+        const existingID = studentIdMap.get(adm);
+        output.innerText = `Your Unique ID: ${existingID}`;
+        saveToSheet(name, dept, semester, adm, existingID);
         return;
       }
 
@@ -118,32 +119,30 @@
           usedIds.add(uniqueID);
           studentIdMap.set(adm, uniqueID);
           output.innerText = `Your Unique ID: ${uniqueID}`;
+          saveToSheet(name, dept, semester, adm, uniqueID);
           return;
         }
       }
 
       output.innerText = 'Error: ID limit reached for this admission group.';
     }
+
+    function saveToSheet(name, dept, semester, adm, uid) {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("dept", dept);
+      formData.append("semester", semester);
+      formData.append("adm", adm);
+      formData.append("uid", uid);
+
+      fetch(endpoint, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.text())
+      .then(msg => console.log("Saved to Google Sheet:", msg))
+      .catch(err => console.error("Failed to save:", err));
+    }
   </script>
-  <script>
-  const endpoint = "https://script.google.com/macros/s/AKfycby2MR3JFvIND18uXVam5j72Nj4B3qIflfgXGxwDv3MPfFNnMSubk5nlG6vpLzP5guEJ/exec"; // Replace this with your Apps Script URL
-
-  function saveToSheet(name, dept, semester, adm, uid) {
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("dept", dept);
-    formData.append("semester", semester);
-    formData.append("adm", adm);
-    formData.append("uid", uid);
-
-    fetch(endpoint, {
-      method: "POST",
-      body: formData
-    })
-    .then(response => response.text())
-    .then(result => console.log("Sheet response:", result))
-    .catch(error => console.error("Error!", error.message));
-  }
-</script>
 </body>
 </html>
