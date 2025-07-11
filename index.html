@@ -64,6 +64,10 @@
       font-weight: bold;
       font-family: monospace;
     }
+
+    .error {
+      color: red;
+    }
   </style>
 </head>
 <body>
@@ -72,10 +76,10 @@
     <h2>IEDC Premium ID Generator</h2>
     <p class="info">Use Admission Number, not Register Number.<br>Example: 22BR15182</p>
 
-    <input type="text" id="name" placeholder="Full Name" required>
-    <input type="text" id="dept" placeholder="Department" required>
-    <input type="text" id="semester" placeholder="Semester" required>
-    <input type="text" id="adm" placeholder="Admission Number (e.g., 22BR15182)" required>
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="text" id="dept" placeholder="Department">
+    <input type="text" id="semester" placeholder="Semester">
+    <input type="text" id="adm" placeholder="Admission Number (e.g., 22BR15182)">
     <button onclick="generateID()">Generate ID</button>
 
     <div id="output" class="result"></div>
@@ -98,11 +102,9 @@
         return;
       }
 
-      // If already generated
       if (studentIdMap.has(adm)) {
         const existingID = studentIdMap.get(adm);
         output.innerText = `Your Unique ID: ${existingID}`;
-        saveToSheet(name, dept, semester, adm, existingID);
         return;
       }
 
@@ -140,8 +142,18 @@
         body: formData
       })
       .then(res => res.text())
-      .then(msg => console.log("Saved to Google Sheet:", msg))
-      .catch(err => console.error("Failed to save:", err));
+      .then(msg => {
+        console.log("Sheet response:", msg);
+        if (msg.trim() === "Duplicate") {
+          document.getElementById("output").innerText = "Entry already exists for this student.";
+        } else if (msg.trim() === "Saved") {
+          console.log("Saved to sheet.");
+        }
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        document.getElementById("output").innerText = "Error saving to sheet.";
+      });
     }
   </script>
 </body>
